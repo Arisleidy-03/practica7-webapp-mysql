@@ -1,0 +1,42 @@
+services:
+  # Servidor de aplicación: PHP con Apache
+  app:
+    build: .
+    container_name: practica7-app
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_NAME: practica7
+      DB_USER: usuario
+      DB_PASSWORD: usuario123
+    volumes:
+      - ./src:/var/www/html
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Base de datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: practica7-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: practica7
+      MYSQL_USER: usuario
+      MYSQL_PASSWORD: usuario123
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  db_data:
